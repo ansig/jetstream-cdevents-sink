@@ -67,11 +67,11 @@ func NewJetstreamMsg(subject string, data []byte) *JetstreamMsg {
 	}
 }
 
-type MockWebhookTranslator struct {
+type WebhookTranslator struct {
 	mock.Mock
 }
 
-func (m *MockWebhookTranslator) Translate(data []byte) (cdevents.CDEvent, error) {
+func (m *WebhookTranslator) Translate(data []byte) (cdevents.CDEvent, error) {
 	args := m.Called(data)
 	if args.Get(0) == nil {
 		return nil, args.Error(1) // Because otherwise we will panic on the type conversion below when first argument is nil
@@ -79,11 +79,11 @@ func (m *MockWebhookTranslator) Translate(data []byte) (cdevents.CDEvent, error)
 	return args.Get(0).(cdevents.CDEvent), args.Error(1)
 }
 
-type MockInvalidMessageHandler struct {
+type InvalidMessageHandler struct {
 	mock.Mock
 }
 
-func (m *MockInvalidMessageHandler) Receive(invalidMsg transport.JetstreamMsg, originalErr error) error {
+func (m *InvalidMessageHandler) Receive(invalidMsg transport.JetstreamMsg, originalErr error) error {
 	args := m.Called(invalidMsg, originalErr)
 	return args.Error(0)
 }

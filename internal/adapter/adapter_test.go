@@ -84,10 +84,10 @@ func TestProcess(t *testing.T) {
 			mockPublisher := &mocks.CloudEventPublisher{}
 			mockPublisher.On("Publish", mock.Anything).Return(tc.publisherError)
 
-			mockTranslator := &mocks.MockWebhookTranslator{}
+			mockTranslator := &mocks.WebhookTranslator{}
 			mockTranslator.On("Translate", mock.Anything).Return(tc.translatedEvent, tc.translatorError)
 
-			mockInvMsgHandler := &mocks.MockInvalidMessageHandler{}
+			mockInvMsgHandler := &mocks.InvalidMessageHandler{}
 			mockInvMsgHandler.On("Receive", mock.Anything, mock.Anything).Return(tc.invalidMsgHandlerError)
 
 			adapter := &CDEvents{
