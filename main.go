@@ -15,10 +15,10 @@ import (
 
 	"github.com/ansig/jetstream-cdevents-sink/internal/adapter"
 	"github.com/ansig/jetstream-cdevents-sink/internal/invalidmsg"
+	"github.com/ansig/jetstream-cdevents-sink/internal/sink"
 	"github.com/ansig/jetstream-cdevents-sink/internal/translator"
 	"github.com/ansig/jetstream-cdevents-sink/internal/transport"
 	"github.com/ansig/jetstream-cdevents-sink/internal/webhook"
-	"github.com/ansig/jetstream-cdevents-sink/sink"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nats-io/nats.go"
