@@ -15,6 +15,7 @@ import (
 
 	"github.com/ansig/jetstream-cdevents-sink/internal/adapter"
 	"github.com/ansig/jetstream-cdevents-sink/internal/invalidmsg"
+	"github.com/ansig/jetstream-cdevents-sink/internal/metrics"
 	"github.com/ansig/jetstream-cdevents-sink/internal/sink"
 	"github.com/ansig/jetstream-cdevents-sink/internal/translator"
 	"github.com/ansig/jetstream-cdevents-sink/internal/transport"
@@ -23,6 +24,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nats-io/nats.go"
 	natsjs "github.com/nats-io/nats.go/jetstream"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -208,9 +211,20 @@ func main() {
 
 	cloudEventPublisher := transport.NewCloudEventJetStreamPublisher(nc)
 
+	reg := prometheus.NewRegistry()
+
+	reg.MustRegister(
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	)
+
+	middleware := metrics.NewMiddleware(reg, nil)
+
 	mux := http.NewServeMux()
-	mux.Handle("/webhook", webhook.Handler(jetstream, env.WebhookSubjectBase))
-	mux.Handle("/sink", sink.Handler(cloudEventPublisher))
+	mux.Handle("/webhook", middleware.WrapHandler("/webhook", webhook.Handler(jetstream, env.WebhookSubjectBase)))
+	mux.Handle("/sink", middleware.WrapHandler("/sink", sink.Handler(cloudEventPublisher)))
+	mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -223,7 +237,6 @@ func main() {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 	})
-	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := http.Server{
 		Addr:         *addr,
